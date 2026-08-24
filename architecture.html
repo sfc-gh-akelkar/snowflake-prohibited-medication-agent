@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="snowflake-source" content="cortex-agent-authored" />
+  <title>Prohibited Medication Classification Agent - Architecture</title>
+  <script type="application/json" id="snowflake-report-metadata">
+  {
+    "generated": "2026-08-24",
+    "intent": "Architecture diagram for Prohibited Medication Classification Agent on Snowflake",
+    "sections": [
+      { "id": "architecture", "title": "Solution Architecture",
+        "dataSources": [],
+        "producerNotes": "Mermaid diagram rendered client-side. No live data — static architecture reference." }
+    ]
+  }
+  </script>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      font-family: -apple-system, system-ui, 'Segoe UI', sans-serif;
+      max-width: 1100px; width: 100%; box-sizing: border-box;
+      margin: 0 auto; padding: clamp(16px, 4vw, 32px);
+      color: light-dark(#1f2937, #e5e7eb);
+      background: light-dark(#ffffff, #0f172a);
+    }
+    h1 { 
+      color: light-dark(#0f172a, #f1f5f9); 
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      margin-bottom: 0.25em;
+    }
+    .subtitle {
+      color: light-dark(#6b7280, #9ca3af);
+      font-size: 0.95rem;
+      margin-bottom: 2em;
+    }
+    h2 { 
+      color: light-dark(#0f172a, #f1f5f9); 
+      font-size: 1.2rem;
+      margin-top: 2em;
+      border-bottom: 1px solid light-dark(#e5e7eb, #374151);
+      padding-bottom: 0.4em;
+    }
+    .mermaid {
+      margin: 1.5em 0;
+      overflow-x: auto;
+    }
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin: 1.5em 0;
+    }
+    .legend-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: light-dark(#f9fafb, #1e293b);
+      border: 1px solid light-dark(#e5e7eb, #334155);
+    }
+    .legend-dot {
+      width: 12px; height: 12px;
+      border-radius: 3px;
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+    .legend-text { font-size: 0.85rem; line-height: 1.4; }
+    .legend-label { font-weight: 600; display: block; }
+
+    .callout {
+      margin: 1.5em 0;
+      padding: 16px 20px;
+      border-radius: 8px;
+      background: light-dark(#eff6ff, #1e3a5f);
+      border-left: 4px solid #29B5E8;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    .callout strong { color: light-dark(#1e40af, #93c5fd); }
+
+    .flow-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin: 1em 0 2em;
+    }
+    .flow-step {
+      padding: 14px;
+      border-radius: 8px;
+      background: light-dark(#f9fafb, #1e293b);
+      border: 1px solid light-dark(#e5e7eb, #334155);
+      text-align: center;
+    }
+    .flow-step-num {
+      display: inline-block;
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: #29B5E8;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 700;
+      line-height: 24px;
+      margin-bottom: 6px;
+    }
+    .flow-step-title { font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 4px; }
+    .flow-step-desc { font-size: 0.78rem; color: light-dark(#6b7280, #9ca3af); }
+
+    footer {
+      margin-top: 3em;
+      padding-top: 1em;
+      border-top: 1px solid light-dark(#e5e7eb, #374151);
+      font-size: 0.8rem;
+      color: light-dark(#9ca3af, #6b7280);
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Prohibited Medication Classification Agent</h1>
+  <p class="subtitle">Snowflake-native solution for automated drug prohibition determination in clinical trials</p>
+
+  <h2 id="architecture">Solution Architecture</h2>
+
+  <pre class="mermaid">
+flowchart TD
+    subgraph sources ["Data Sources"]
+        direction LR
+        DB["DrugBank\n(Data Share)\n---\n16K+ drugs\nTherapeutic classes\nATC codes"]
+        FDA["FDA DailyMed\n(Marketplace Listing)\n---\nContraindications\nBoxed warnings\nDrug interactions"]
+        EDC["EDC System\n(First Party)\n---\nFree-text medication entries\nper participant per protocol"]
+        PROTO["Protocol Definitions\n(First Party)\n---\nProhibited drug classes\nper clinical trial"]
+    end
+
+    subgraph snowflake ["Snowflake AI Data Cloud"]
+        direction TB
+
+        subgraph dataLayer ["Structured Data Layer"]
+            direction LR
+            DRUGS["Drugs +\nTherapeutic Categories\n(Star Schema)"]
+            LABELS["FDA Label\nSections"]
+            RULES["Protocol\nProhibition Rules"]
+            MEDS["EDC Medication\nEntries"]
+        end
+
+        subgraph aiLayer ["AI Intelligence Layer"]
+            direction LR
+            SEARCH["Cortex Search Service\n---\nMedication Name Resolver\nFuzzy match free-text\nto canonical DrugBank ID"]
+            SV["Semantic Views\n---\nDrug Classification\nProhibition Rules\nViolation Detection"]
+        end
+
+        subgraph agentLayer ["Agent Layer"]
+            AGENT["Cortex Agent\n---\nProhibited Medication\nClassification Engine"]
+        end
+    end
+
+    subgraph outputs ["Outputs"]
+        direction LR
+        API["Agent API\n(App Integration)"]
+        SI["Snowflake Intelligence\n(Natural Language)"]
+        ALERT["Violation Alerts\n(Protocol Compliance)"]
+    end
+
+    DB --> DRUGS
+    FDA --> LABELS
+    EDC --> MEDS
+    PROTO --> RULES
+
+    MEDS -->|"free-text query"| SEARCH
+    SEARCH -->|"resolved DrugBank ID"| SV
+    DRUGS --> SV
+    LABELS --> SV
+    RULES --> SV
+
+    SV -->|"tool calls"| AGENT
+
+    AGENT --> API
+    AGENT --> SI
+    AGENT --> ALERT
+  </pre>
+
+  <h2>Query Resolution Flow</h2>
+  <p>How the agent answers: "Is Lipitor prohibited in Protocol MPC-ONC-001?"</p>
+
+  <div class="flow-steps">
+    <div class="flow-step">
+      <span class="flow-step-num">1</span>
+      <span class="flow-step-title">Resolve Name</span>
+      <span class="flow-step-desc">Cortex Search matches "Lipitor" to DrugBank ID DB00439 (Atorvastatin)</span>
+    </div>
+    <div class="flow-step">
+      <span class="flow-step-num">2</span>
+      <span class="flow-step-title">Classify Drug</span>
+      <span class="flow-step-desc">Lookup: DB00439 belongs to category "HMG-CoA Reductase Inhibitors" (Statins)</span>
+    </div>
+    <div class="flow-step">
+      <span class="flow-step-num">3</span>
+      <span class="flow-step-title">Check Rules</span>
+      <span class="flow-step-desc">Query protocol prohibition table: Is "Statins" prohibited in MPC-ONC-001?</span>
+    </div>
+    <div class="flow-step">
+      <span class="flow-step-num">4</span>
+      <span class="flow-step-title">Return Answer</span>
+      <span class="flow-step-desc">NOT PROHIBITED. Statins are not in the exclusion list for this oncology trial.</span>
+    </div>
+  </div>
+
+  <pre class="mermaid">
+flowchart LR
+    INPUT["EDC Entry:\nlipitor 20mg po qd"]
+    CS["Cortex Search\nService"]
+    DRUG["DB00439\nAtorvastatin"]
+    CAT["HMG-CoA Reductase\nInhibitors (Statins)"]
+    RULE["Protocol MPC-ONC-001\nProhibited Classes"]
+    RESULT["NOT PROHIBITED\nStatins not excluded"]
+
+    INPUT -->|"fuzzy match"| CS
+    CS -->|"score: 0.96"| DRUG
+    DRUG -->|"drug_categorizations JOIN"| CAT
+    CAT -->|"protocol_prohibited_classes JOIN"| RULE
+    RULE -->|"no match found"| RESULT
+  </pre>
+
+  <h2>Data Model</h2>
+
+  <pre class="mermaid">
+erDiagram
+    DRUGS ||--o{ DRUG_CATEGORIZATIONS : "classified in"
+    CATEGORIES ||--o{ DRUG_CATEGORIZATIONS : "contains"
+    CATEGORIES ||--o{ PROTOCOL_PROHIBITED_CLASSES : "prohibited by"
+    CLINICAL_PROTOCOLS ||--o{ PROTOCOL_PROHIBITED_CLASSES : "prohibits"
+    DRUGS ||--o{ DRUG_SYNONYMS : "also known as"
+    DRUGS ||--o{ PRODUCTS : "marketed as"
+    CLINICAL_PROTOCOLS ||--o{ EDC_MEDICATIONS : "entered in"
+    DRUGS ||--o{ FDA_DRUG_LABELS : "labeled with"
+
+    DRUGS {
+        string DRUGBANK_ID PK
+        string NAME
+        string DESCRIPTION
+        string CAS_NUMBER
+    }
+    CATEGORIES {
+        string CATEGORY_ID PK
+        string TITLE
+        string CATEGORIZATION_KIND
+        string ATC_CODE
+    }
+    DRUG_CATEGORIZATIONS {
+        string DRUG_ID FK
+        string CATEGORY_ID FK
+    }
+    PROTOCOL_PROHIBITED_CLASSES {
+        string PROTOCOL_ID FK
+        string CATEGORY_ID FK
+        string PROHIBITION_REASON
+        string SEVERITY
+        string EXCEPTION_CRITERIA
+    }
+    CLINICAL_PROTOCOLS {
+        string PROTOCOL_ID PK
+        string PROTOCOL_NAME
+        string THERAPEUTIC_AREA
+        string PHASE
+    }
+    EDC_MEDICATIONS {
+        string ENTRY_ID PK
+        string PROTOCOL_ID FK
+        string PARTICIPANT_ID
+        string MEDICATION_TEXT
+        string DOSE
+        string FREQUENCY
+    }
+    DRUG_SYNONYMS {
+        string DRUGBANK_ID FK
+        string SYNONYM
+        string SYNONYM_TYPE
+    }
+    FDA_DRUG_LABELS {
+        string LABEL_ID PK
+        string DRUG_ID FK
+        string SECTION_TYPE
+        string SECTION_TEXT
+    }
+    PRODUCTS {
+        string PRODUCT_ID PK
+        string NAME
+        string NDC_CODE
+        string DRUG_ID FK
+    }
+</pre>
+
+  <h2>Color Legend</h2>
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-dot" style="background: #29B5E8;"></div>
+      <div class="legend-text">
+        <span class="legend-label">Snowflake Platform</span>
+        All compute, storage, and governance within Snowflake
+      </div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background: #2f9e44;"></div>
+      <div class="legend-text">
+        <span class="legend-label">Data Sources</span>
+        DrugBank (share), FDA (marketplace), EDC + Protocols (first party)
+      </div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background: #7048e8;"></div>
+      <div class="legend-text">
+        <span class="legend-label">AI Layer</span>
+        Cortex Search (name resolution) + Semantic Views (business logic)
+      </div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background: #e8590c;"></div>
+      <div class="legend-text">
+        <span class="legend-label">Outputs</span>
+        API integration, natural language queries, compliance alerts
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>Key Design Decision:</strong> No graph database required. The drug-to-prohibition traversal is 2-3 SQL joins 
+    (drug &rarr; category &rarr; protocol prohibition rule). Cortex Search handles fuzzy name resolution 
+    at ~100ms latency. The full solution runs natively in Snowflake with zero external dependencies.
+  </div>
+
+  <h2>Why This Architecture</h2>
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-text">
+        <span class="legend-label">No External MCP</span>
+        All data and compute inside Snowflake. No production dependency on external services.
+      </div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-text">
+        <span class="legend-label">No Neo4j Needed</span>
+        2-3 hop traversal is a SQL join problem, not a graph problem. Saves infrastructure cost and complexity.
+      </div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-text">
+        <span class="legend-label">AI-Powered Matching</span>
+        Cortex Search resolves messy EDC text (brand names, abbreviations, misspellings) to canonical drug IDs.
+      </div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-text">
+        <span class="legend-label">Declarative Rules</span>
+        New protocol? Just add rows to PROTOCOL_PROHIBITED_CLASSES. No code changes required.
+      </div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-text">
+        <span class="legend-label">Always-Current Data</span>
+        DrugBank via live share, FDA via marketplace listing. Zero ETL for reference data.
+      </div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-text">
+        <span class="legend-label">Governance Preserved</span>
+        Snowflake RBAC, masking policies, and row access policies apply through the agent layer.
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Generated by Cortex Code | August 2026 | Snowflake AI Data Cloud
+  </footer>
+
+  <script src="/libs/mermaid@10.9.6/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({ 
+      startOnLoad: true, 
+      securityLevel: 'strict',
+      theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default',
+      flowchart: { 
+        htmlLabels: true,
+        curve: 'basis',
+        nodeSpacing: 30,
+        rankSpacing: 60
+      },
+      er: {
+        layoutDirection: 'TB'
+      }
+    });
+  </script>
+
+</body>
+</html>
