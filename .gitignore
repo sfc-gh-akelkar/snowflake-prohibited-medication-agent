@@ -1,0 +1,9 @@
+.DS_Store
+.snowflake/
+medpace-dbt-deck/
+medpace-harmonization/
+medpace-ml-demo/
+medpace-workspace/
+*.html
+!architecture.html
+coco_*.md
