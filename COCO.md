@@ -9,6 +9,10 @@ The templates in `templates/` have TODO placeholders — replace them with real 
 - Pattern: EDC free-text → Cortex Search (resolve name) → SQL joins (drug → category → prohibition rule) → Agent response
 - Data sources: DrugBank (share), FDA labels (marketplace or loaded), EDC medications (first party), protocol rules (first party)
 
+## Requirements Validation
+
+When the user asks to validate requirements, walk through the questions in `docs/requirements-validation.md` interactively. Use the ask_user_question tool to present each group of questions. After collecting answers, update `docs/requirements.md` with the confirmed decisions and adjust the SQL templates accordingly.
+
 ## Build Order
 
 Execute templates in numbered order:
